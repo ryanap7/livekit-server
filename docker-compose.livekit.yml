@@ -1,0 +1,115 @@
+services:
+  # ==================== LIVEKIT SERVER ====================
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: simtelpas-livekit
+    restart: unless-stopped
+
+    command:
+      - "--config"
+      - "/etc/livekit/livekit.yaml"
+
+    ports:
+      - "7880:7880" # HTTP / WS
+      - "7881:7881" # TCP fallback
+      - "50000-50100:50000-50100/udp" # RTP
+
+    volumes:
+      - ./config/livekit.yaml:/etc/livekit/livekit.yaml:ro
+      - livekit-logs:/var/log/livekit
+
+    environment:
+      LIVEKIT_LOG_LEVEL: info
+
+    depends_on:
+      livekit-redis:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:7880"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - simtelpas-network
+
+  # ==================== REDIS (LIVEKIT) ====================
+  livekit-redis:
+    image: redis:7-alpine
+    container_name: simtelpas-livekit-redis
+    restart: unless-stopped
+
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - "256mb"
+      - --maxmemory-policy
+      - "allkeys-lru"
+
+    volumes:
+      - livekit-redis-data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+    networks:
+      - simtelpas-network
+
+  # ==================== EGRESS (RECORDING) ====================
+  livekit-egress:
+    image: livekit/egress:latest
+    container_name: simtelpas-livekit-egress
+    restart: unless-stopped
+
+    environment:
+      EGRESS_CONFIG_FILE: /etc/egress/egress.yaml
+      EGRESS_LOG_LEVEL: debug
+      CHROME_ARGS: "--no-sandbox --disable-dev-shm-usage --disable-gpu"
+      LIVEKIT_WS_URL: "ws://simtelpas-livekit:7880"
+
+    volumes:
+      - ./config/egress.yaml:/etc/egress/egress.yaml:ro
+      - ./recordings:/out
+      - /dev/shm:/dev/shm
+
+    depends_on:
+      livekit:
+        condition: service_healthy
+      livekit-redis:
+        condition: service_healthy
+
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 6G
+        reservations:
+          cpus: "2.0"
+          memory: 2G
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    networks:
+      - simtelpas-network
+
+volumes:
+  livekit-redis-data:
+    driver: local
+  livekit-logs:
+    driver: local
+
+networks:
+  simtelpas-network:
+    external: true
+    name: simtelpas-network

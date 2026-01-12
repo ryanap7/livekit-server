@@ -1,0 +1,68 @@
+# ==================== LIVEKIT SERVER CONFIG ====================
+port: 7880
+
+bind_addresses:
+  - "0.0.0.0"
+
+# ==================== API KEYS ====================
+keys:
+  simtelpas: PX+Idu5s3eYlCRpaBah40qomKCvLJHx04ycxXobmLnc=
+
+# ==================== REDIS ====================
+redis:
+  address: simtelpas-livekit-redis:6379
+  db: 0
+
+# ==================== RTC (WebRTC) ====================
+rtc:
+  port_range_start: 50000
+  port_range_end: 50100
+
+  use_external_ip: true
+  node_ip: "192.168.1.12"
+
+  # TCP fallback
+  tcp_port: 7881
+
+  # TURN servers (optional)
+  turn_servers:
+    - host: "192.168.1.12"
+      port: 3478
+      protocol: "udp"
+
+  # STUN servers
+  stun_servers:
+    - stun.l.google.com:19302
+    - stun1.l.google.com:19302
+
+# ==================== ROOM CONFIG ====================
+room:
+  auto_create: true
+  empty_timeout: 300
+  max_participants: 5
+
+  enabled_codecs:
+    - mime: audio/opus
+      fmtp_line: "minptime=10;useinbandfec=1"
+    - mime: video/h264
+
+# ==================== WEBHOOK ====================
+webhook:
+  api_key: simtelpas
+  urls:
+    - http://host.docker.internal:3000/api/livekit/webhooks/events
+
+# ==================== LOGGING ====================
+logging:
+  level: info
+  json: false
+  sample: false
+  pion_level: warn
+
+# ==================== LIMITS ====================
+limit:
+  bytes_per_sec: 5000000
+
+# ==================== SIGNAL RELAY ====================
+signal_relay:
+  retry_timeout: 15s

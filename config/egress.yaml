@@ -1,0 +1,59 @@
+# ==================== LIVEKIT EGRESS CONFIG ====================
+
+# ==================== API KEYS ====================
+api_key: simtelpas
+api_secret: PX+Idu5s3eYlCRpaBah40qomKCvLJHx04ycxXobmLnc=
+
+# ==================== LIVEKIT CONNECTION ====================
+ws_url: ws://simtelpas-livekit:7880
+health_port: 9090
+
+# ==================== REDIS ====================
+redis:
+  address: simtelpas-livekit-redis:6379
+  db: 0
+  username: ""
+  password: ""
+
+# ==================== WEBHOOK ====================
+webhook:
+  urls:
+    - http://simtelpas-backend:3000/api/livekit/webhooks/egress
+
+# ==================== LOGGING ====================
+logging:
+  level: debug
+  json: false
+  sample: false
+
+# ==================== FILE OUTPUT ====================
+file_output:
+  s3:
+    endpoint: http://simtelpas-minio:9000
+    region: us-east-1
+    bucket: simtelpas
+    force_path_style: true
+    access_key: minioadmin
+    secret: minioadmin
+
+# ==================== TEMPLATES ====================
+template_base: "https://egress-composite.livekit.cloud"
+enable_chrome_sandbox: false
+
+# ==================== CPU & MEMORY ====================
+cpu_cost:
+  room_composite_cpu_cost: 2.0
+  web_cpu_cost: 2.0
+  participant_cpu_cost: 1.5
+  track_composite_cpu_cost: 1.5
+  track_cpu_cost: 1.0
+
+max_cpu_utilization: 0.85
+
+# ==================== MONITORING ====================
+prometheus_port: 9091
+
+# ==================== SESSION LIMITS ====================
+session_limits:
+  track_composite_timeout: 60s
+  room_composite_timeout: 60s
